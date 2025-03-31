@@ -1,0 +1,287 @@
+[
+    {
+        "calories": 246.0,
+        "components": [
+            {
+                "name": "Apple",
+                "servings": 0.5
+            },
+            {
+                "name": "Whole Wheat Bread",
+                "servings": 2.0
+            }
+        ],
+        "keywords": [
+            "healthy",
+            "tasty",
+            "apple",
+            "bread",
+            "sandwich"
+        ],
+        "name": "Apple Sandwich",
+        "type": "composite"
+    },
+    {
+        "calories": 732.25,
+        "components": [
+            {
+                "name": "Chicken Breast",
+                "servings": 1.0
+            },
+            {
+                "name": "Baked Potato",
+                "servings": 1.0
+            },
+            {
+                "name": "Broccoli",
+                "servings": 1.5
+            },
+            {
+                "name": "Cheese Sandwich",
+                "servings": 0.5
+            }
+        ],
+        "keywords": [
+            "meal",
+            "dinner",
+            "chicken dinner",
+            "complete meal",
+            "balanced"
+        ],
+        "name": "Chicken Dinner Combo",
+        "type": "composite"
+    },
+    {
+        "calories": 315.5,
+        "components": [
+            {
+                "name": "Baked Potato",
+                "servings": 1.0
+            },
+            {
+                "name": "Cheddar Cheese",
+                "servings": 0.5
+            },
+            {
+                "name": "Broccoli",
+                "servings": 1.0
+            }
+        ],
+        "keywords": [
+            "potato",
+            "loaded potato",
+            "cheesy potato",
+            "vegetarian",
+            "dinner"
+        ],
+        "name": "Loaded Potato",
+        "type": "composite"
+    },
+    {
+        "calories": 113.0,
+        "keywords": [
+            "dairy",
+            "cheese",
+            "cheddar",
+            "protein"
+        ],
+        "name": "Cheddar Cheese",
+        "type": "basic"
+    },
+    {
+        "calories": 150.0,
+        "keywords": [
+            "meat",
+            "beef",
+            "hot dog",
+            "sausage",
+            "processed"
+        ],
+        "name": "Hot Dog",
+        "type": "basic"
+    },
+    {
+        "calories": 105.0,
+        "keywords": [
+            "carb",
+            "bread",
+            "wheat",
+            "slice",
+            "grain"
+        ],
+        "name": "Whole Wheat Bread",
+        "type": "basic"
+    },
+    {
+        "calories": 8.0,
+        "keywords": [
+            "vegetable",
+            "lettuce",
+            "leafy",
+            "green",
+            "salad"
+        ],
+        "name": "Lettuce",
+        "type": "basic"
+    },
+    {
+        "calories": 146.0,
+        "keywords": [
+            "dairy",
+            "milk",
+            "whole",
+            "liquid"
+        ],
+        "name": "Whole Milk",
+        "type": "basic"
+    },
+    {
+        "calories": 72.0,
+        "keywords": [
+            "fruit",
+            "apple",
+            "fresh",
+            "sweet"
+        ],
+        "name": "Apple",
+        "type": "basic"
+    },
+    {
+        "calories": 206.5,
+        "components": [
+            {
+                "name": "Lettuce",
+                "servings": 2.0
+            },
+            {
+                "name": "Tomato",
+                "servings": 1.0
+            },
+            {
+                "name": "Chicken Breast",
+                "servings": 0.5
+            },
+            {
+                "name": "Broccoli",
+                "servings": 0.75
+            }
+        ],
+        "keywords": [
+            "salad",
+            "chicken salad",
+            "healthy",
+            "lunch",
+            "low carb"
+        ],
+        "name": "Chicken Salad",
+        "type": "composite"
+    },
+    {
+        "calories": 0.0,
+        "keywords": [
+            "graphite",
+            "powder",
+            "black",
+            "tasty",
+            "hb",
+            "0.7mm"
+        ],
+        "name": "pencil",
+        "type": "basic"
+    },
+    {
+        "calories": 15.0,
+        "keywords": [
+            "tomato",
+            "vegetable",
+            "fruit",
+            "red"
+        ],
+        "name": "Tomato",
+        "type": "basic"
+    },
+    {
+        "calories": 215.0,
+        "keywords": [
+            "carb",
+            "potato",
+            "starch",
+            "vegetable"
+        ],
+        "name": "Baked Potato",
+        "type": "basic"
+    },
+    {
+        "calories": 285.0,
+        "keywords": [
+            "protein",
+            "chicken",
+            "breast",
+            "meat",
+            "poultry"
+        ],
+        "name": "Chicken Breast",
+        "type": "basic"
+    },
+    {
+        "calories": 44.0,
+        "keywords": [
+            "vegetable",
+            "broccoli",
+            "green",
+            "cruciferous"
+        ],
+        "name": "Broccoli",
+        "type": "basic"
+    },
+    {
+        "calories": 255.0,
+        "components": [
+            {
+                "name": "Hot Dog",
+                "servings": 1.0
+            },
+            {
+                "name": "Whole Wheat Bread",
+                "servings": 1.0
+            }
+        ],
+        "keywords": [
+            "hot dog",
+            "sandwich",
+            "fast food",
+            "lunch"
+        ],
+        "name": "Hot Dog Sandwich",
+        "type": "composite"
+    },
+    {
+        "calories": 332.5,
+        "components": [
+            {
+                "name": "Whole Wheat Bread",
+                "servings": 2.0
+            },
+            {
+                "name": "Cheddar Cheese",
+                "servings": 1.0
+            },
+            {
+                "name": "Tomato",
+                "servings": 0.5
+            },
+            {
+                "name": "Lettuce",
+                "servings": 0.25
+            }
+        ],
+        "keywords": [
+            "sandwich",
+            "lunch",
+            "cheese sandwich",
+            "vegetarian"
+        ],
+        "name": "Cheese Sandwich",
+        "type": "composite"
+    }
+]
