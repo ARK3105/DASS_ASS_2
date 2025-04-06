@@ -108,9 +108,9 @@ public:
 // Food diary main class
 class FoodDiary {
 private:
-    std::string databaseFile;
+    std::string databaseFile; //
     std::string logFile;
-    std::map<std::string, Food> foods;
+    std::map<std::string, Food> foods; //
     std::map<std::string, std::vector<FoodEntry>> dailyLogs;
     std::stack<std::shared_ptr<Command>> undoStack;
     std::string currentDate;
@@ -361,7 +361,6 @@ public:
                 results.push_back(name);
             }
         }
-        
         return results;
     }
 
@@ -667,6 +666,22 @@ public:
             std::cout << "7. View Undo Stack\n";
             std::cout << "8. Save and Exit\n";
             std::cout << "Choice: ";
+            
+
+            // cout << "\n===== Diet Assistant Menu =====\n";
+            // cout << "1. Search foods\n";
+            // cout << "2. View food details\n";
+            // cout << "3. Add basic food\n";
+            // cout << "4. Create composite food\n";
+            // cout << "5. List all foods\n";
+            // cout << "6. Save database\n";
+            // cout << "7. View Today's Log\n";
+            // cout << "8. Add Food Entry\n";
+            // cout << "9. Delete Food Entry\n";
+            // cout << "10. Change Current Date\n";
+            // cout << "11. Undo Last Action\n";
+            // cout << "12. Exit\n";
+
             
             int choice;
             std::cin >> choice;

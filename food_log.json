@@ -17,5 +17,17 @@
             "food": "Lettuce",
             "servings": 4.0
         }
+    ],
+    "2025-04-07": [
+        {
+            "calories": 855.0,
+            "food": "Chicken Breast",
+            "servings": 3.0
+        },
+        {
+            "calories": 997.5,
+            "food": "Cheese Sandwich",
+            "servings": 3.0
+        }
     ]
 }
