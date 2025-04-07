@@ -1,10 +1,14 @@
 {
-  "age": 30,
+  "age": 31,
   "calculationMethod": 0,
   "dailyProfiles": {
     "2025-04-07": {
+      "activityLevel": 4,
+      "weight": 71.0
+    },
+    "2025-04-08": {
       "activityLevel": 2,
-      "weight": 70.0
+      "weight": 99.0
     }
   },
   "gender": 2,

@@ -1824,6 +1824,7 @@ public:
                 break;
             case 16:
                 profileManager.displayCalorieSummary(foodDiary.getCurrentDate());
+                break;
             case 17:
                 handleExit();
                 break;
