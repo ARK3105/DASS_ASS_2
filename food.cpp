@@ -19,6 +19,28 @@
 using namespace std;
 using json = nlohmann::json;
 
+enum class Gender
+{
+    MALE,
+    FEMALE,
+    OTHER
+};
+
+enum class ActivityLevel
+{
+    SEDENTARY,
+    LIGHTLY_ACTIVE,
+    MODERATELY_ACTIVE,
+    VERY_ACTIVE,
+    EXTREMELY_ACTIVE
+};
+
+enum class CalorieCalculationMethod
+{
+    HARRIS_BENEDICT,
+    MIFFLIN_ST_JEOR
+};
+
 class Food;
 class BasicFood;
 class CompositeFood;
@@ -954,7 +976,529 @@ public:
 
         cout << endl;
     }
+    double getTotalCaloriesForDate(const string &date) const
+    {
+        auto it = dailyLogs.find(date);
+        if (it == dailyLogs.end())
+        {
+            return 0.0;
+        }
+
+        double totalCalories = 0.0;
+        for (const auto &entry : it->second)
+        {
+            totalCalories += entry.calories;
+        }
+        return totalCalories;
+    }
 };
+
+// Class to store user's daily profile information
+class DailyProfile
+{
+private:
+    double weight; // in kg
+    ActivityLevel activityLevel;
+
+public:
+    DailyProfile(double w = 70.0, ActivityLevel a = ActivityLevel::MODERATELY_ACTIVE)
+        : weight(w), activityLevel(a) {}
+
+    double getWeight() const { return weight; }
+    void setWeight(double w) { weight = w; }
+
+    ActivityLevel getActivityLevel() const { return activityLevel; }
+    void setActivityLevel(ActivityLevel a) { activityLevel = a; }
+
+    json toJson() const
+    {
+        json j;
+        j["weight"] = weight;
+        j["activityLevel"] = static_cast<int>(activityLevel);
+        return j;
+    }
+
+    static DailyProfile fromJson(const json &j)
+    {
+        return DailyProfile(
+            j["weight"].get<double>(),
+            static_cast<ActivityLevel>(j["activityLevel"].get<int>()));
+    }
+};
+
+// Class to represent user's unchanging profile information
+class UserProfile
+{
+private:
+    string userId;
+    Gender gender;
+    double height; // in cm
+    int age;
+    CalorieCalculationMethod calculationMethod;
+    unordered_map<string, DailyProfile> dailyProfiles;
+
+    // Calculate BMR using Harris-Benedict equation
+    double calculateBMRHarrisBenedict(double weight) const
+    {
+        if (gender == Gender::MALE)
+        {
+            return 66.5 + (13.75 * weight) + (5.003 * height) - (6.75 * age);
+        }
+        else
+        {
+            return 655.1 + (9.563 * weight) + (1.850 * height) - (4.676 * age);
+        }
+    }
+
+    // Calculate BMR using Mifflin-St Jeor equation
+    double calculateBMRMifflinStJeor(double weight) const
+    {
+        if (gender == Gender::MALE)
+        {
+            return (10 * weight) + (6.25 * height) - (5 * age) + 5;
+        }
+        else
+        {
+            return (10 * weight) + (6.25 * height) - (5 * age) - 161;
+        }
+    }
+
+    // Get activity multiplier based on activity level
+    double getActivityMultiplier(ActivityLevel level) const
+    {
+        switch (level)
+        {
+        case ActivityLevel::SEDENTARY:
+            return 1.2;
+        case ActivityLevel::LIGHTLY_ACTIVE:
+            return 1.375;
+        case ActivityLevel::MODERATELY_ACTIVE:
+            return 1.55;
+        case ActivityLevel::VERY_ACTIVE:
+            return 1.725;
+        case ActivityLevel::EXTREMELY_ACTIVE:
+            return 1.9;
+        default:
+            return 1.55; // Moderate activity default
+        }
+    }
+
+public:
+    UserProfile(
+        string id = "user",
+        Gender g = Gender::OTHER,
+        double h = 170.0,
+        int a = 30,
+        CalorieCalculationMethod m = CalorieCalculationMethod::MIFFLIN_ST_JEOR) : userId(id), gender(g), height(h), age(a), calculationMethod(m) {}
+
+    // Getters and setters
+    string getUserId() const { return userId; }
+
+    Gender getGender() const { return gender; }
+    void setGender(Gender g) { gender = g; }
+
+    double getHeight() const { return height; }
+    void setHeight(double h) { height = h; }
+
+    int getAge() const { return age; }
+    void setAge(int a) { age = a; }
+
+    CalorieCalculationMethod getCalculationMethod() const { return calculationMethod; }
+    void setCalculationMethod(CalorieCalculationMethod m) { calculationMethod = m; }
+
+    // Calculate daily calorie target
+    double calculateDailyCalorieTarget(const string &date)
+    {
+        if (dailyProfiles.find(date) == dailyProfiles.end())
+        {
+            // If no profile exists for this date, copy from most recent day or use default
+            setDailyProfileFromMostRecent(date);
+        }
+
+        const DailyProfile &profile = dailyProfiles[date];
+        double bmr = 0.0;
+
+        // Calculate BMR based on selected method
+        if (calculationMethod == CalorieCalculationMethod::HARRIS_BENEDICT)
+        {
+            bmr = calculateBMRHarrisBenedict(profile.getWeight());
+        }
+        else
+        {
+            bmr = calculateBMRMifflinStJeor(profile.getWeight());
+        }
+
+        // Apply activity multiplier
+        return bmr * getActivityMultiplier(profile.getActivityLevel());
+    }
+
+    // Check if a profile exists for a specific date
+    bool hasProfileForDate(const string &date) const
+    {
+        return dailyProfiles.find(date) != dailyProfiles.end();
+    }
+
+    // Set daily profile for a specific date
+    void setDailyProfile(const string &date, const DailyProfile &profile)
+    {
+        dailyProfiles[date] = profile;
+    }
+
+    // Get daily profile for a specific date
+    DailyProfile getDailyProfile(const string &date)
+    {
+        if (dailyProfiles.find(date) == dailyProfiles.end())
+        {
+            setDailyProfileFromMostRecent(date);
+        }
+        return dailyProfiles[date];
+    }
+
+    // Set profile for a date based on most recent available profile
+    void setDailyProfileFromMostRecent(const string &targetDate)
+    {
+        // If no profiles exist yet, create a default one
+        if (dailyProfiles.empty())
+        {
+            dailyProfiles[targetDate] = DailyProfile();
+            return;
+        }
+
+        // Find the most recent date before the target date
+        string mostRecentDate = "";
+        for (const auto &[date, _] : dailyProfiles)
+        {
+            if (date <= targetDate && (mostRecentDate.empty() || date > mostRecentDate))
+            {
+                mostRecentDate = date;
+            }
+        }
+
+        // If found, copy that profile; otherwise use the earliest available profile
+        if (!mostRecentDate.empty())
+        {
+            dailyProfiles[targetDate] = dailyProfiles[mostRecentDate];
+        }
+        else {
+            dailyProfiles[targetDate] = DailyProfile();
+        }
+        // else
+        // {
+        //     // Find earliest date
+        //     string earliestDate = dailyProfiles.begin()->first;
+        //     for (const auto &[date, _] : dailyProfiles)
+        //     {
+        //         if (date < earliestDate)
+        //         {
+        //             earliestDate = date;
+        //         }
+        //     }
+        //     dailyProfiles[targetDate] = dailyProfiles[earliestDate];
+        // }
+    }
+
+    // Save profile to JSON
+    json toJson() const
+    {
+        json j;
+        j["userId"] = userId;
+        j["gender"] = static_cast<int>(gender);
+        j["height"] = height;
+        j["age"] = age;
+        j["calculationMethod"] = static_cast<int>(calculationMethod);
+
+        json dailyProfilesJson;
+        for (const auto &[date, profile] : dailyProfiles)
+        {
+            dailyProfilesJson[date] = profile.toJson();
+        }
+        j["dailyProfiles"] = dailyProfilesJson;
+
+        return j;
+    }
+
+    // Load profile from JSON
+    static UserProfile fromJson(const json &j)
+    {
+        UserProfile profile(
+            j["userId"].get<string>(),
+            static_cast<Gender>(j["gender"].get<int>()),
+            j["height"].get<double>(),
+            j["age"].get<int>(),
+            static_cast<CalorieCalculationMethod>(j["calculationMethod"].get<int>()));
+
+        if (j.contains("dailyProfiles"))
+        {
+            for (const auto &[date, profileJson] : j["dailyProfiles"].items())
+            {
+                profile.dailyProfiles[date] = DailyProfile::fromJson(profileJson);
+            }
+        }
+
+        return profile;
+    }
+};
+
+// Class to manage the user's profile and goals
+class ProfileManager
+{
+private:
+    UserProfile userProfile;
+    FoodDiary& foodDiary;
+    string profileFilePath;
+
+    string getActivityLevelString(ActivityLevel level) const
+    {
+        switch (level)
+        {
+        case ActivityLevel::SEDENTARY:
+            return "Sedentary";
+        case ActivityLevel::LIGHTLY_ACTIVE:
+            return "Lightly Active";
+        case ActivityLevel::MODERATELY_ACTIVE:
+            return "Moderately Active";
+        case ActivityLevel::VERY_ACTIVE:
+            return "Very Active";
+        case ActivityLevel::EXTREMELY_ACTIVE:
+            return "Extremely Active";
+        default:
+            return "Unknown";
+        }
+    }
+
+    string getGenderString(Gender gender) const
+    {
+        switch (gender)
+        {
+        case Gender::MALE:
+            return "Male";
+        case Gender::FEMALE:
+            return "Female";
+        case Gender::OTHER:
+            return "Other";
+        default:
+            return "Unknown";
+        }
+    }
+
+    string getCalculationMethodString(CalorieCalculationMethod method) const
+    {
+        switch (method)
+        {
+        case CalorieCalculationMethod::HARRIS_BENEDICT:
+            return "Harris-Benedict";
+        case CalorieCalculationMethod::MIFFLIN_ST_JEOR:
+            return "Mifflin-St Jeor";
+        default:
+            return "Unknown";
+        }
+    }
+
+public:
+    ProfileManager(FoodDiary &fd, const string &profileFile)
+        : foodDiary(fd), profileFilePath(profileFile)
+    {
+        loadProfile();
+    }
+
+    ~ProfileManager()
+    {
+        saveProfile();
+    }
+
+    // Load profile from file
+    void loadProfile()
+    {
+        try
+        {
+            ifstream file(profileFilePath);
+            if (!file.is_open())
+            {
+                cout << "No existing profile found. Starting with default profile." << endl;
+                return;
+            }
+
+            json j;
+            file >> j;
+            userProfile = UserProfile::fromJson(j);
+
+            cout << "Profile loaded successfully." << endl;
+        }
+        catch (const exception &e)
+        {
+            cout << "Error loading profile: " << e.what() << endl;
+        }
+    }
+
+    // Save profile to file
+    void saveProfile()
+    {
+        try
+        {
+            json j = userProfile.toJson();
+
+            ofstream file(profileFilePath);
+            file << j.dump(2);
+            cout << "Profile saved successfully." << endl;
+        }
+        catch (const exception &e)
+        {
+            cout << "Error saving profile: " << e.what() << endl;
+        }
+    }
+
+    // Display user profile
+    void displayUserProfile(const string &date)
+    {
+        DailyProfile dailyProfile = userProfile.getDailyProfile(date);
+        cout << "\n===== User Profile for " << date << "=====" << endl;
+        cout << "Gender: " << getGenderString(userProfile.getGender()) << endl;
+        cout << "Height: " << userProfile.getHeight() << " cm" << endl;
+        cout << "Age: " << userProfile.getAge() << " years" << endl;
+        cout << "Calorie calculation method: " << getCalculationMethodString(userProfile.getCalculationMethod()) << endl;
+        cout << "Weight: " << dailyProfile.getWeight() << " kg" << endl;
+        cout << "Activity Level: " << getActivityLevelString(dailyProfile.getActivityLevel()) << endl;
+
+        // Calculate and display calorie goal
+        double calorieTarget = userProfile.calculateDailyCalorieTarget(date);
+        cout << "Daily Calorie Target: " << calorieTarget << " calories" << endl;
+        cout << "=============================" << endl;
+    }
+
+    // Display daily profile for a specific date
+    void displayDailyProfile(const string &date)
+    {
+        DailyProfile dailyProfile = userProfile.getDailyProfile(date);
+
+        cout << "\n===== Daily Profile for " << date << " =====" << endl;
+        cout << "Weight: " << dailyProfile.getWeight() << " kg" << endl;
+        cout << "Activity Level: " << getActivityLevelString(dailyProfile.getActivityLevel()) << endl;
+
+        // Calculate and display calorie goal
+        double calorieTarget = userProfile.calculateDailyCalorieTarget(date);
+        cout << "Daily Calorie Target: " << calorieTarget << " calories" << endl;
+    }
+
+    // Calculate and display calorie summary for a date
+    void displayCalorieSummary(const string &date)
+    {
+        // Get calorie target
+        double calorieTarget = userProfile.calculateDailyCalorieTarget(date);
+
+        // Calculate consumed calories
+        double consumedCalories = 0.0;
+
+        // This assumes your LogManager class has a method to get the total calories for a date
+        // Modify this part based on your LogManager implementation
+        consumedCalories = foodDiary.getTotalCaloriesForDate(date);
+
+        // Calculate difference
+        double calorieDifference = consumedCalories - calorieTarget;
+
+        cout << "\n===== Calorie Summary for " << date << " =====" << endl;
+        cout << "Target: " << calorieTarget << " calories" << endl;
+        cout << "Consumed: " << consumedCalories << " calories" << endl;
+
+        if (calorieDifference < 0)
+        {
+            cout << "Remaining: " << -calorieDifference << " calories" << endl;
+        }
+        else
+        {
+            cout << "Excess: " << calorieDifference << " calories" << endl;
+        }
+    }
+
+    // Update user profile
+    void updateUserProfile(const string &date)
+    {
+        cout << "\n===== Update User Profile for " << date << "=====" << endl;
+
+        cout << "Enter age: ";
+        int age;
+        cin >> age;
+        if (age < 0 || age > 1000) {
+            cout << "Invalid age. Please enter a valid age." << endl;
+            return;
+        }
+        
+        cout << "Enter weight (kg): ";
+        double weight;
+        cin >> weight;
+        if (weight <= 0) {
+            cout << "Invalid weight. Please enter a valid weight." << endl;
+            return;
+        }
+        
+        DailyProfile dailyProfile = userProfile.getDailyProfile(date);
+        
+        cout << "Select activity level (0 = Sedentary, 1 = Lightly Active, "
+        << "2 = Moderately Active, 3 = Very Active, 4 = Extremely Active): ";
+        int activityChoice;
+        cin >> activityChoice;
+        if (activityChoice < 0 || activityChoice > 4) {
+            cout << "Invalid activity level. Please select a valid option." << endl;
+            return;
+        }
+        
+        
+        userProfile.setAge(age);
+        dailyProfile.setWeight(weight);
+        dailyProfile.setActivityLevel(static_cast<ActivityLevel>(activityChoice));
+        userProfile.setDailyProfile(date, dailyProfile);
+
+        cout << "Select calorie calculation method (0 = Harris-Benedict, 1 = Mifflin-St Jeor): ";
+        int methodChoice;
+        cin >> methodChoice;
+        userProfile.setCalculationMethod(static_cast<CalorieCalculationMethod>(methodChoice));
+
+        cin.ignore();
+    }
+
+    // Update daily profile for a specific date
+    void updateDailyProfile(const string &date)
+    {
+        DailyProfile dailyProfile = userProfile.getDailyProfile(date);
+
+        cout << "\n===== Update Daily Profile for " << date << " =====" << endl;
+
+        cout << "Enter weight (kg): ";
+        double weight;
+        cin >> weight;
+        dailyProfile.setWeight(weight);
+
+        cout << "Select activity level (0 = Sedentary, 1 = Lightly Active, "
+             << "2 = Moderately Active, 3 = Very Active, 4 = Extremely Active): ";
+        int activityChoice;
+        cin >> activityChoice;
+        dailyProfile.setActivityLevel(static_cast<ActivityLevel>(activityChoice));
+
+        userProfile.setDailyProfile(date, dailyProfile);
+
+        cin.ignore();
+    }
+
+    // Change calculation method
+    void changeCalculationMethod()
+    {
+        cout << "\n===== Change Calculation Method =====" << endl;
+        cout << "Current method: " << getCalculationMethodString(userProfile.getCalculationMethod()) << endl;
+        cout << "Available methods:" << endl;
+        cout << "0 - Harris-Benedict" << endl;
+        cout << "1 - Mifflin-St Jeor" << endl;
+        cout << "Select method: ";
+
+        int methodChoice;
+        cin >> methodChoice;
+        userProfile.setCalculationMethod(static_cast<CalorieCalculationMethod>(methodChoice));
+
+        cout << "Calculation method changed to "
+             << getCalculationMethodString(userProfile.getCalculationMethod()) << endl;
+
+        cin.ignore();
+    }
+};
+
 
 // Command Line Interface class
 class DietAssistantCLI
@@ -962,6 +1506,7 @@ class DietAssistantCLI
 private:
     FoodDatabaseManager dbManager;
     FoodDiary foodDiary;
+    ProfileManager profileManager;
     bool running;
 
     void displayMenu()
@@ -978,9 +1523,14 @@ private:
         cout << "9. Delete Food Entry\n";
         cout << "10. Change Current Date\n";
         cout << "11. Undo Last Action\n";
-        cout << "12. Exit\n";
+        cout << "12. Change date\n";
+        cout << "13. View User Profile\n";
+        cout << "14. Update User Profile\n";
+        cout << "15. Change calorie calculation method\n";
+        cout << "16. View Calorie summary\n";
+        cout << "17. Exit\n";
         cout << "==============================\n";
-        cout << "Enter choice (1-12): ";
+        cout << "Enter choice (1-17): ";
     }
 
     void searchFoods()
@@ -988,7 +1538,8 @@ private:
         cout << "1. Do you want to search by keywords? (yes/no): ";
         string choice;
         cin >> choice;
-        if (choice == "yes") {
+        if (choice == "yes")
+        {
             cout << "Enter keywords (separated by spaces): ";
             string keywordInput;
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -1021,7 +1572,8 @@ private:
                      << food->getCalories() << " calories" << endl;
             }
         }
-        else {
+        else
+        {
             cout << "Enter food name: ";
             string name;
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -1203,10 +1755,10 @@ private:
     }
 
 public:
-DietAssistantCLI(const string &databasePath = "food_database.json", const string &logPath = "food_log.json")
-    : dbManager(databasePath), foodDiary(dbManager, logPath), running(false)
-{}
-
+    DietAssistantCLI(const string &databasePath = "food_database.json", const string &logPath = "food_log.json", const string &profilePath = "user_profile.json")
+        : dbManager(databasePath), foodDiary(dbManager, logPath), profileManager(foodDiary, profilePath), running(false)
+    {
+    }
 
     void start()
     {
@@ -1255,10 +1807,24 @@ DietAssistantCLI(const string &databasePath = "food_database.json", const string
                 foodDiary.changeDate();
                 break;
             case 11:
-            // should undo
+                // should undo
                 foodDiary.undo();
                 break;
             case 12:
+                foodDiary.changeDate();
+                break;
+            case 13:
+                profileManager.displayUserProfile(foodDiary.getCurrentDate());
+                break;
+            case 14:
+                profileManager.updateUserProfile(foodDiary.getCurrentDate());
+                break;
+            case 15:
+                profileManager.changeCalculationMethod();
+                break;
+            case 16:
+                profileManager.displayCalorieSummary(foodDiary.getCurrentDate());
+            case 17:
                 handleExit();
                 break;
             default:

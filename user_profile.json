@@ -1,0 +1,13 @@
+{
+  "age": 30,
+  "calculationMethod": 0,
+  "dailyProfiles": {
+    "2025-04-07": {
+      "activityLevel": 2,
+      "weight": 70.0
+    }
+  },
+  "gender": 2,
+  "height": 170.0,
+  "userId": "user"
+}
